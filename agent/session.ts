@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 import { Session, LeadData, ConversationMessage } from './types';
 import { LEAD_STATUS, LEAD_SOURCES, LeadStatus } from '../config/constants';
 import { logger } from '../config/logger';
@@ -22,7 +22,7 @@ export function getOrCreateSession(phoneNumber: string): Session {
   }
 
   const session: Session = {
-    id: uuidv4(),
+    id: randomUUID(),
     phoneNumber,
     messages: [],
     leadData: emptyLeadData(),
