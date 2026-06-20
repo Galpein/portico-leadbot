@@ -38,8 +38,8 @@ app.use((req, _res, next) => {
 app.get('/health', handleHealthCheck);
 
 // WhatsApp webhook
-app.get('/webhook', verifyWebhook);
-app.post('/webhook', handleIncomingMessage);
+app.get('/webhook/whatsapp', verifyWebhook);
+app.post('/webhook/whatsapp', handleIncomingMessage);
 
 // Demo endpoint (simula mensajes entrantes sin WhatsApp real)
 app.post('/demo/message', handleDemoMessage);
