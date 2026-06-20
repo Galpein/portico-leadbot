@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LeadBot — Demo agente WhatsApp</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0b141a;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 24px;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+
+  /* ── TELÉFONO ─────────────────────────────────────────── */
+  .phone {
+    width: 360px;
+    background: #0b141a;
+    border-radius: 36px;
+    border: 2px solid #2a3942;
+    overflow: hidden;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.8);
+    flex-shrink: 0;
+  }
+  .phone-header {
+    background: #1f2c34;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .avatar {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #25d366, #128c7e);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+  }
+  .contact-info h3 { color: #e9edef; font-size: 15px; font-weight: 600; }
+  .contact-info p { color: #8696a0; font-size: 12px; }
+  .chat-area {
+    height: 460px;
+    overflow-y: auto;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: #0b141a;
+    scroll-behavior: smooth;
+  }
+  .bubble {
+    max-width: 82%;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.5;
+    word-break: break-word;
+    animation: fadeIn 0.2s ease;
+  }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
+  .bubble.agent  { background:#1f2c34; color:#e9edef; border-radius:0 8px 8px 8px; align-self:flex-start; }
+  .bubble.user   { background:#005c4b; color:#e9edef; border-radius:8px 0 8px 8px; align-self:flex-end; }
+  .bubble.typing { background:#1f2c34; align-self:flex-start; padding:12px 16px; }
+  .dots { display:flex; gap:4px; }
+  .dots span { width:6px; height:6px; background:#8696a0; border-radius:50%; animation:bounce 1.2s infinite; }
+  .dots span:nth-child(2) { animation-delay:.2s; }
+  .dots span:nth-child(3) { animation-delay:.4s; }
+  @keyframes bounce { 0%,60%,100%{ transform:translateY(0); } 30%{ transform:translateY(-6px); } }
+  .input-area {
+    background:#1f2c34; padding:10px 12px;
+    display:flex; gap:8px; align-items:center;
+  }
+  input {
+    flex:1; background:#2a3942; border:none; border-radius:24px;
+    padding:10px 16px; color:#e9edef; font-size:14px; outline:none;
+  }
+  input::placeholder { color:#8696a0; }
+  .send-btn {
+    width:40px; height:40px; border-radius:50%; border:none;
+    background:#25d366; color:white; font-size:16px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:background .2s; flex-shrink:0;
+  }
+  .send-btn:hover { background:#20ba5a; }
+  .send-btn:disabled { background:#3a4a52; cursor:not-allowed; }
+  .phone-hint { color:#8696a0; font-size:11px; text-align:center; padding:6px; background:#0b141a; }
+  .error-msg { color:#ff6b6b; font-size:11px; text-align:center; padding:6px; display:none; }
+
+  /* ── PANEL DE ANÁLISIS ───────────────────────────────── */
+  .analysis {
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .panel-title {
+    color: #8696a0;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    font-weight: 600;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #2a3942;
+  }
+
+  /* Estado del lead */
+  .lead-status-card {
+    background: #1f2c34;
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .status-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .status-label { color:#8696a0; font-size:12px; }
+  .status-badge {
+    font-size:13px; font-weight:700;
+    padding:4px 14px; border-radius:20px;
+    transition: all .4s ease;
+  }
+  .status-badge.cold  { background:#1e2a30; color:#8696a0; }
+  .status-badge.warm  { background:#332d00; color:#ffc107; }
+  .status-badge.hot   { background:#0d2818; color:#25d366; box-shadow:0 0 12px rgba(37,211,102,.3); }
+
+  /* Barra de progreso */
+  .score-bar-wrap { display:flex; flex-direction:column; gap:6px; }
+  .score-bar-label { display:flex; justify-content:space-between; color:#8696a0; font-size:11px; }
+  .score-bar-track { height:6px; background:#2a3942; border-radius:3px; overflow:hidden; }
+  .score-bar-fill  { height:100%; border-radius:3px; transition:width .6s ease, background .6s ease; }
+
+  /* Datos extraídos */
+  .extracted-card {
+    background: #1f2c34;
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .data-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0;
+    border-bottom: 1px solid #2a3942;
+    transition: background .2s;
+  }
+  .data-row:last-child { border-bottom: none; }
+  .data-row.filled .data-val { color:#e9edef; }
+  .data-row.empty  .data-val { color:#3a4a52; }
+  .data-icon { font-size:14px; width:20px; text-align:center; }
+  .data-key  { color:#8696a0; font-size:12px; flex:1; }
+  .data-val  { font-size:13px; font-weight:500; text-align:right; transition:color .3s; }
+  .data-row.just-filled { animation: highlight .8s ease; }
+  @keyframes highlight {
+    0%   { background: rgba(37,211,102,.15); }
+    100% { background: transparent; }
+  }
+
+  /* Criterios de calificación */
+  .criteria-card {
+    background: #1f2c34;
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .criterion {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size:12px;
+    transition: color .3s;
+  }
+  .criterion .dot {
+    width:8px; height:8px; border-radius:50%;
+    background:#2a3942; flex-shrink:0;
+    transition: background .4s, box-shadow .4s;
+  }
+  .criterion.met { color:#e9edef; }
+  .criterion.met .dot { background:#25d366; box-shadow:0 0 6px rgba(37,211,102,.5); }
+  .criterion.unmet { color:#8696a0; }
+</style>
+</head>
+<body>
+
+<!-- TELÉFONO -->
+<div class="phone">
+  <div class="phone-header">
+    <div class="avatar">🏠</div>
+    <div class="contact-info">
+      <h3>Inmobiliaria Premium</h3>
+      <p>Asistente virtual · En línea</p>
+    </div>
+  </div>
+  <div class="chat-area" id="chatArea"></div>
+  <div class="error-msg" id="errorMsg">⚠ No se puede conectar. Recarga la página.</div>
+  <div class="phone-hint" style="display:flex;justify-content:space-between;align-items:center;padding:6px 12px;">
+    <span>Escribe como si fueras un lead real</span>
+    <button onclick="resetDemo()" style="background:none;border:1px solid #3a4a52;color:#8696a0;font-size:11px;padding:3px 10px;border-radius:12px;cursor:pointer;">↺ Reiniciar</button>
+  </div>
+  <div class="input-area">
+    <input id="msgInput" type="text" placeholder="Escribe un mensaje..." autocomplete="off" />
+    <button class="send-btn" id="sendBtn" onclick="sendMessage()">➤</button>
+  </div>
+</div>
+
+<!-- PANEL DE ANÁLISIS -->
+<div class="analysis">
+  <div class="panel-title">Análisis en tiempo real</div>
+
+  <!-- Estado -->
+  <div class="lead-status-card">
+    <div class="status-row">
+      <span class="status-label">Estado del lead</span>
+      <span class="status-badge cold" id="statusBadge">FRÍO</span>
+    </div>
+    <div class="score-bar-wrap">
+      <div class="score-bar-label">
+        <span>Puntuación de cualificación</span>
+        <span id="scoreText">0 / 3</span>
+      </div>
+      <div class="score-bar-track">
+        <div class="score-bar-fill" id="scoreBar" style="width:0%;background:#3a4a52;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Datos extraídos -->
+  <div class="extracted-card">
+    <div class="panel-title" style="border:none;padding:0 0 4px 0;">Datos extraídos</div>
+    <div class="data-row empty" id="row-type">
+      <span class="data-icon">🏷</span>
+      <span class="data-key">Operación</span>
+      <span class="data-val" id="val-type">—</span>
+    </div>
+    <div class="data-row empty" id="row-propertyType">
+      <span class="data-icon">🏠</span>
+      <span class="data-key">Inmueble</span>
+      <span class="data-val" id="val-propertyType">—</span>
+    </div>
+    <div class="data-row empty" id="row-zone">
+      <span class="data-icon">📍</span>
+      <span class="data-key">Zona</span>
+      <span class="data-val" id="val-zone">—</span>
+    </div>
+    <div class="data-row empty" id="row-budget">
+      <span class="data-icon">💶</span>
+      <span class="data-key">Presupuesto</span>
+      <span class="data-val" id="val-budget">—</span>
+    </div>
+    <div class="data-row empty" id="row-urgencyMonths">
+      <span class="data-icon">📅</span>
+      <span class="data-key">Urgencia</span>
+      <span class="data-val" id="val-urgencyMonths">—</span>
+    </div>
+    <div class="data-row empty" id="row-needsFinancing">
+      <span class="data-icon">🏦</span>
+      <span class="data-key">Financiación</span>
+      <span class="data-val" id="val-needsFinancing">—</span>
+    </div>
+    <div class="data-row empty" id="row-name">
+      <span class="data-icon">👤</span>
+      <span class="data-key">Nombre</span>
+      <span class="data-val" id="val-name">—</span>
+    </div>
+  </div>
+
+  <!-- Criterios de calificación -->
+  <div class="criteria-card">
+    <div class="panel-title" style="border:none;padding:0 0 4px 0;">Criterios CALIENTE</div>
+    <div class="criterion unmet" id="crit-budget">
+      <div class="dot"></div>Presupuesto definido
+    </div>
+    <div class="criterion unmet" id="crit-zone">
+      <div class="dot"></div>Zona especificada
+    </div>
+    <div class="criterion unmet" id="crit-urgency">
+      <div class="dot"></div>Urgencia ≤ 3 meses
+    </div>
+  </div>
+</div>
+
+<script>
+const PHONE = '+34600demo01';
+const API = '/demo/message';
+
+const chatArea = document.getElementById('chatArea');
+const input = document.getElementById('msgInput');
+const sendBtn = document.getElementById('sendBtn');
+const errorMsg = document.getElementById('errorMsg');
+
+let prevLeadData = {};
+
+function addBubble(text, role) {
+  const div = document.createElement('div');
+  div.className = `bubble ${role}`;
+  div.textContent = text;
+  chatArea.appendChild(div);
+  chatArea.scrollTop = chatArea.scrollHeight;
+}
+
+function showTyping() {
+  const div = document.createElement('div');
+  div.className = 'bubble typing';
+  div.id = 'typingIndicator';
+  div.innerHTML = '<div class="dots"><span></span><span></span><span></span></div>';
+  chatArea.appendChild(div);
+  chatArea.scrollTop = chatArea.scrollHeight;
+}
+
+function removeTyping() {
+  const t = document.getElementById('typingIndicator');
+  if (t) t.remove();
+}
+
+function updatePanel(session) {
+  const d = session.leadData;
+  const st = session.status;
+
+  // Badge estado
+  const badge = document.getElementById('statusBadge');
+  badge.textContent = st;
+  badge.className = 'status-badge ' + (st === 'CALIENTE' ? 'hot' : st === 'TIBIO' ? 'warm' : 'cold');
+
+  // Score bar
+  const score = [d.budget, d.zone, d.urgencyMonths !== null && d.urgencyMonths <= 3 ? true : null]
+    .filter(v => v !== null && v !== undefined && v !== false).length;
+  const pct = (score / 3 * 100).toFixed(0);
+  const bar = document.getElementById('scoreBar');
+  bar.style.width = pct + '%';
+  bar.style.background = score === 3 ? '#25d366' : score === 2 ? '#ffc107' : '#3a4a52';
+  document.getElementById('scoreText').textContent = score + ' / 3';
+
+  // Filas de datos
+  const fields = {
+    type:           { val: d.type, fmt: v => v === 'compra' ? 'Compra' : 'Alquiler' },
+    propertyType:   { val: d.propertyType, fmt: v => capitalize(v) },
+    zone:           { val: d.zone, fmt: v => v },
+    budget:         { val: d.budget, fmt: v => v.toLocaleString('es-ES') + ' €' },
+    urgencyMonths:  { val: d.urgencyMonths, fmt: v => v <= 1 ? 'Inmediata' : v + ' meses' },
+    needsFinancing: { val: d.needsFinancing, fmt: v => v ? 'Sí, hipoteca' : 'No, al contado' },
+    name:           { val: d.name, fmt: v => v },
+  };
+
+  for (const [key, { val, fmt }] of Object.entries(fields)) {
+    const row = document.getElementById('row-' + key);
+    const valEl = document.getElementById('val-' + key);
+    const hasValue = val !== null && val !== undefined;
+    const wasEmpty = prevLeadData[key] === null || prevLeadData[key] === undefined;
+
+    if (hasValue) {
+      valEl.textContent = fmt(val);
+      row.className = 'data-row filled';
+      if (wasEmpty) row.classList.add('just-filled');
+    } else {
+      valEl.textContent = '—';
+      row.className = 'data-row empty';
+    }
+  }
+
+  // Criterios
+  setCriterion('crit-budget', d.budget !== null && d.budget > 0);
+  setCriterion('crit-zone', d.zone !== null && d.zone.trim().length > 0);
+  setCriterion('crit-urgency', d.urgencyMonths !== null && d.urgencyMonths <= 3);
+
+  prevLeadData = { ...d };
+
+  // Limpia animación de highlight tras .8s
+  setTimeout(() => {
+    document.querySelectorAll('.just-filled').forEach(el => el.classList.remove('just-filled'));
+  }, 900);
+}
+
+function setCriterion(id, met) {
+  const el = document.getElementById(id);
+  el.className = 'criterion ' + (met ? 'met' : 'unmet');
+}
+
+function capitalize(s) {
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+}
+
+async function sendMessage() {
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  sendBtn.disabled = true;
+  errorMsg.style.display = 'none';
+  addBubble(text, 'user');
+  showTyping();
+
+  try {
+    const res = await fetch(API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phoneNumber: PHONE, text }),
+    });
+    removeTyping();
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    addBubble(data.message, 'agent');
+    updatePanel(data.session);
+  } catch {
+    removeTyping();
+    errorMsg.style.display = 'block';
+  } finally {
+    sendBtn.disabled = false;
+    input.focus();
+  }
+}
+
+input.addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage(); });
+
+async function resetDemo() {
+  try {
+    await fetch('/demo/reset', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phoneNumber: PHONE }),
+    });
+  } catch {}
+  chatArea.innerHTML = '';
+  prevLeadData = {};
+  document.getElementById('statusBadge').textContent = 'FRÍO';
+  document.getElementById('statusBadge').className = 'status-badge cold';
+  document.getElementById('scoreBar').style.width = '0%';
+  document.getElementById('scoreBar').style.background = '#3a4a52';
+  document.getElementById('scoreText').textContent = '0 / 3';
+  ['type','propertyType','zone','budget','urgencyMonths','needsFinancing','name'].forEach(k => {
+    document.getElementById('row-' + k).className = 'data-row empty';
+    document.getElementById('val-' + k).textContent = '—';
+  });
+  ['crit-budget','crit-zone','crit-urgency'].forEach(id => setCriterion(id, false));
+  errorMsg.style.display = 'none';
+  setTimeout(() => {
+    addBubble('¡Hola! Soy el asistente de Inmobiliaria Premium. ¿Estás buscando comprar o alquilar?', 'agent');
+  }, 200);
+}
+
+// Saludo inicial
+setTimeout(() => {
+  addBubble('¡Hola! Soy el asistente de Inmobiliaria Premium. ¿Estás buscando comprar o alquilar?', 'agent');
+}, 400);
+</script>
+</body>
+</html>

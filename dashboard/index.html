@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pórtico — Panel de la inmobiliaria</title>
+<style>
+:root {
+  /* Corporate / trust palette — light */
+  --bg:        #f4f6fa;
+  --surface:   #ffffff;
+  --surface-2: #f8fafc;
+  --border:    #e6eaf1;
+  --border-2:  #eef1f6;
+
+  --brand:     #2563eb;
+  --brand-700: #1d4ed8;
+  --brand-50:  #eef4ff;
+  --brand-100: #dbe7ff;
+
+  --green:     #16a34a;
+  --green-50:  #e9f8ef;
+  --amber:     #d97706;
+  --amber-50:  #fdf3e3;
+  --slate:     #94a3b8;
+  --slate-50:  #f1f5f9;
+  --red:       #dc2626;
+
+  --text:      #0f1b2d;
+  --text-2:    #475569;
+  --muted:     #8a98aa;
+
+  --shadow-sm: 0 1px 2px rgba(16,24,40,.04), 0 1px 3px rgba(16,24,40,.06);
+  --shadow-md: 0 4px 12px rgba(16,24,40,.06), 0 2px 4px rgba(16,24,40,.04);
+  --radius:    14px;
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  -webkit-font-smoothing: antialiased;
+  font-size: 14px;
+}
+button { font-family: inherit; }
+
+/* ── SIDEBAR ─────────────────────────────────────────────── */
+.sidebar {
+  width: 232px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 18px 14px;
+}
+.brand { display: flex; align-items: center; gap: 11px; padding: 6px 8px 18px; }
+.brand-mark {
+  width: 38px; height: 38px; border-radius: 10px;
+  background: linear-gradient(150deg, var(--brand), var(--brand-700));
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 10px rgba(37,99,235,.30);
+  flex-shrink: 0;
+}
+.brand-name { font-size: 18px; font-weight: 800; letter-spacing: -.02em; }
+.brand-sub  { font-size: 10.5px; color: var(--muted); margin-top: 1px; letter-spacing: .01em; }
+
+.nav { display: flex; flex-direction: column; gap: 3px; margin-top: 4px; }
+.nav-label { font-size: 10.5px; font-weight: 700; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; padding: 14px 10px 6px; }
+.nav-item {
+  display: flex; align-items: center; gap: 11px;
+  padding: 9px 11px; border-radius: 9px;
+  color: var(--text-2); font-size: 14px; font-weight: 500;
+  cursor: pointer; border: none; background: none; width: 100%; text-align: left;
+  transition: background .15s, color .15s;
+}
+.nav-item:hover { background: var(--surface-2); color: var(--text); }
+.nav-item.active { background: var(--brand-50); color: var(--brand-700); font-weight: 600; }
+.nav-item .ic { width: 18px; height: 18px; flex-shrink: 0; }
+.nav-item .count {
+  margin-left: auto; font-size: 11px; font-weight: 700;
+  background: var(--slate-50); color: var(--text-2);
+  padding: 1px 8px; border-radius: 20px;
+}
+.nav-item.active .count { background: var(--brand-100); color: var(--brand-700); }
+
+.sidebar-foot { margin-top: auto; }
+.conn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 11px; border-radius: 9px; background: var(--surface-2);
+  font-size: 12px; color: var(--text-2); margin-bottom: 10px;
+}
+.conn-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--slate); flex-shrink: 0; }
+.conn.live .conn-dot { background: var(--green); box-shadow: 0 0 0 3px var(--green-50); }
+.conn.demo .conn-dot { background: var(--amber); box-shadow: 0 0 0 3px var(--amber-50); }
+.agency {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 6px; border-top: 1px solid var(--border-2);
+}
+.agency-avatar {
+  width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;
+  background: var(--brand-50); color: var(--brand-700);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 13px;
+}
+.agency-name { font-size: 13px; font-weight: 600; line-height: 1.2; }
+.agency-plan { font-size: 11px; color: var(--muted); }
+
+/* ── MAIN ────────────────────────────────────────────────── */
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.topbar {
+  height: 60px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 28px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.topbar h1 { font-size: 17px; font-weight: 700; letter-spacing: -.01em; }
+.topbar .crumb { font-size: 12.5px; color: var(--muted); margin-top: 1px; }
+.topbar-right { display: flex; align-items: center; gap: 14px; }
+.pill {
+  font-size: 10.5px; font-weight: 700; letter-spacing: .06em;
+  padding: 4px 11px; border-radius: 20px;
+  background: var(--amber-50); color: var(--amber);
+}
+.refresh { font-size: 12px; color: var(--muted); }
+.btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 8px 14px; border-radius: 9px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--text-2);
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  transition: border-color .15s, background .15s, color .15s;
+}
+.btn:hover { background: var(--surface-2); color: var(--text); }
+.btn-primary { background: var(--brand); border-color: var(--brand); color: #fff; }
+.btn-primary:hover { background: var(--brand-700); color: #fff; }
+
+.scroll { flex: 1; overflow-y: auto; padding: 24px 28px 40px; }
+.scroll::-webkit-scrollbar { width: 9px; }
+.scroll::-webkit-scrollbar-thumb { background: #d4dbe6; border-radius: 8px; border: 3px solid var(--bg); }
+.view { display: none; }
+.view.active { display: block; animation: fade .3s ease; }
+@keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ── KPI CARDS ───────────────────────────────────────────── */
+.kpis { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; }
+.kpi {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px 17px;
+  box-shadow: var(--shadow-sm); position: relative;
+}
+.kpi-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.kpi-ic {
+  width: 32px; height: 32px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+}
+.kpi-ic svg { width: 17px; height: 17px; }
+.kpi-tag { font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 6px; }
+.kpi-val { font-size: 27px; font-weight: 800; letter-spacing: -.02em; line-height: 1; }
+.kpi-val small { font-size: 15px; font-weight: 700; color: var(--muted); }
+.kpi-label { font-size: 12.5px; color: var(--text-2); margin-top: 6px; font-weight: 500; }
+.kpi-sub { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+
+.c-blue  .kpi-ic { background: var(--brand-50); color: var(--brand); }
+.c-green .kpi-ic { background: var(--green-50); color: var(--green); }
+.c-amber .kpi-ic { background: var(--amber-50); color: var(--amber); }
+.c-slate .kpi-ic { background: var(--slate-50); color: var(--text-2); }
+.tag-up   { background: var(--green-50); color: var(--green); }
+.tag-flat { background: var(--slate-50); color: var(--text-2); }
+
+/* ── PANELS / CARDS ──────────────────────────────────────── */
+.row { display: grid; gap: 14px; margin-top: 14px; }
+.row.cols-2 { grid-template-columns: 1fr 360px; }
+.row.cols-leads { grid-template-columns: 320px 1fr; }
+.panel {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow-sm);
+  display: flex; flex-direction: column;
+}
+.panel-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 18px; border-bottom: 1px solid var(--border-2);
+}
+.panel-title { font-size: 14px; font-weight: 700; }
+.panel-sub { font-size: 12px; color: var(--muted); margin-top: 1px; }
+.panel-body { padding: 18px; }
+
+/* ── SVG CHARTS ──────────────────────────────────────────── */
+.chart-area { width: 100%; height: 190px; display: block; }
+.spark-pt { fill: var(--brand); opacity: 0; transition: opacity .15s; }
+.spark-pt:hover { opacity: 1; }
+.chart-grid { stroke: var(--border-2); stroke-width: 1; }
+.chart-axis { font-size: 10px; fill: var(--muted); }
+
+.donut-wrap { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.donut-center text { font-family: var(--font); }
+.legend { width: 100%; display: flex; flex-direction: column; gap: 11px; }
+.legend-item { display: flex; align-items: center; gap: 10px; }
+.legend-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+.legend-name { font-size: 13px; color: var(--text-2); flex: 1; }
+.legend-val { font-size: 14px; font-weight: 700; }
+.legend-pct { font-size: 12px; color: var(--muted); width: 38px; text-align: right; }
+
+/* sources */
+.sources { display: flex; flex-direction: column; gap: 13px; }
+.src-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; }
+.src-name { color: var(--text-2); }
+.src-count { font-weight: 700; }
+.src-count span { color: var(--muted); font-weight: 500; }
+.track { height: 7px; background: var(--slate-50); border-radius: 5px; overflow: hidden; }
+.fill { height: 100%; border-radius: 5px; background: linear-gradient(90deg, var(--brand), var(--brand-700)); transition: width .9s cubic-bezier(.2,.7,.2,1); }
+
+/* ROI banner */
+.roi {
+  grid-column: 1 / -1;
+  background: linear-gradient(120deg, #102a6b, var(--brand-700));
+  border: none; color: #fff; border-radius: var(--radius);
+  padding: 20px 24px; display: flex; align-items: center; gap: 30px;
+  box-shadow: 0 10px 24px rgba(29,78,216,.25);
+}
+.roi-main { display: flex; flex-direction: column; }
+.roi-label { font-size: 12px; opacity: .8; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+.roi-value { font-size: 34px; font-weight: 800; letter-spacing: -.02em; margin-top: 4px; }
+.roi-stats { display: flex; gap: 30px; margin-left: auto; }
+.roi-stat .n { font-size: 20px; font-weight: 700; }
+.roi-stat .l { font-size: 11.5px; opacity: .8; margin-top: 2px; }
+.roi-divider { width: 1px; align-self: stretch; background: rgba(255,255,255,.2); }
+
+/* ── TABLE ───────────────────────────────────────────────── */
+table { width: 100%; border-collapse: collapse; }
+thead th {
+  padding: 11px 18px; text-align: left;
+  font-size: 10.5px; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .05em;
+  border-bottom: 1px solid var(--border-2); background: var(--surface-2);
+}
+tbody tr { border-bottom: 1px solid var(--border-2); transition: background .12s; animation: rowIn .3s ease; }
+@keyframes rowIn { from { opacity: 0; } to { opacity: 1; } }
+tbody tr:hover { background: var(--surface-2); }
+tbody tr:last-child { border-bottom: none; }
+td { padding: 12px 18px; font-size: 13.5px; }
+.t-name { font-weight: 600; }
+.t-sub { font-size: 11.5px; color: var(--muted); margin-top: 1px; }
+.badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 700; }
+.badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.b-hot  { background: var(--green-50); color: var(--green); }
+.b-warm { background: var(--amber-50); color: var(--amber); }
+.b-cold { background: var(--slate-50); color: var(--text-2); }
+.v-yes { color: var(--green); font-weight: 700; }
+.v-no  { color: var(--muted); }
+
+/* ── CHAT (Conversaciones) ───────────────────────────────── */
+.chat-layout { display: grid; grid-template-columns: 1fr 300px; gap: 14px; height: calc(100vh - 60px - 64px); }
+.chat-card { display: flex; flex-direction: column; overflow: hidden; }
+.chat-head {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 18px; border-bottom: 1px solid var(--border-2);
+}
+.chat-ava {
+  width: 40px; height: 40px; border-radius: 11px; flex-shrink: 0;
+  background: linear-gradient(150deg, var(--green), #0e7a38);
+  display: flex; align-items: center; justify-content: center;
+}
+.chat-ava svg { width: 20px; height: 20px; }
+.chat-who h4 { font-size: 14px; font-weight: 700; }
+.chat-who p { font-size: 12px; color: var(--green); display: flex; align-items: center; gap: 5px; }
+.chat-who p::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
+.chat-body {
+  flex: 1; overflow-y: auto; padding: 20px;
+  background: var(--surface-2);
+  display: flex; flex-direction: column; gap: 8px;
+  scroll-behavior: smooth;
+}
+.chat-body::-webkit-scrollbar { width: 8px; }
+.chat-body::-webkit-scrollbar-thumb { background: #d4dbe6; border-radius: 8px; border: 2px solid var(--surface-2); }
+.msg { max-width: 72%; padding: 10px 14px; font-size: 14px; line-height: 1.5; border-radius: 14px; animation: msgIn .22s ease; box-shadow: var(--shadow-sm); }
+@keyframes msgIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+.msg.agent { background: var(--surface); color: var(--text); border-bottom-left-radius: 4px; align-self: flex-start; }
+.msg.user  { background: var(--brand); color: #fff; border-bottom-right-radius: 4px; align-self: flex-end; }
+.msg.typing { background: var(--surface); align-self: flex-start; padding: 13px 15px; }
+.dots { display: flex; gap: 4px; }
+.dots span { width: 6px; height: 6px; background: var(--muted); border-radius: 50%; animation: bounce 1.2s infinite; }
+.dots span:nth-child(2) { animation-delay: .2s; }
+.dots span:nth-child(3) { animation-delay: .4s; }
+@keyframes bounce { 0%,60%,100% { transform: translateY(0); opacity: .5; } 30% { transform: translateY(-6px); opacity: 1; } }
+.chat-input-row { display: flex; gap: 10px; padding: 14px 18px; border-top: 1px solid var(--border-2); }
+.chat-input {
+  flex: 1; border: 1px solid var(--border); border-radius: 11px;
+  padding: 11px 14px; font-size: 14px; outline: none; color: var(--text);
+  transition: border-color .15s, box-shadow .15s;
+}
+.chat-input:focus { border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-50); }
+.chat-input::placeholder { color: var(--muted); }
+.chat-send {
+  width: 44px; border: none; border-radius: 11px; background: var(--brand); color: #fff;
+  cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .15s;
+}
+.chat-send svg { width: 18px; height: 18px; }
+.chat-send:hover { background: var(--brand-700); }
+.chat-send:disabled { background: #c7d2e6; cursor: not-allowed; }
+
+/* side: extracted data */
+.side-panel { display: flex; flex-direction: column; gap: 14px; }
+.status-card { padding: 16px 18px; }
+.status-row { display: flex; align-items: center; justify-content: space-between; }
+.status-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; font-weight: 700; }
+.status-badge { font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 20px; transition: all .35s; }
+.status-badge.cold { background: var(--slate-50); color: var(--text-2); }
+.status-badge.warm { background: var(--amber-50); color: var(--amber); }
+.status-badge.hot  { background: var(--green-50); color: var(--green); }
+.status-msgs { font-size: 12px; color: var(--muted); margin-top: 10px; }
+.de-list { display: flex; flex-direction: column; gap: 0; }
+.de-row { display: flex; align-items: center; gap: 11px; padding: 11px 0; border-bottom: 1px solid var(--border-2); }
+.de-row:last-child { border-bottom: none; }
+.de-ic { width: 30px; height: 30px; border-radius: 8px; background: var(--surface-2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.de-ic svg { width: 15px; height: 15px; color: var(--muted); }
+.de-row.on .de-ic { background: var(--brand-50); }
+.de-row.on .de-ic svg { color: var(--brand); }
+.de-k { font-size: 11px; color: var(--muted); }
+.de-v { font-size: 13.5px; font-weight: 600; color: var(--muted); }
+.de-row.on .de-v { color: var(--text); }
+.de-v.flash { animation: flash .8s ease; }
+@keyframes flash { 0% { color: var(--green); } 100% { color: var(--text); } }
+
+@media (max-width: 1180px) {
+  .kpis { grid-template-columns: repeat(3, 1fr); }
+  .row.cols-2, .row.cols-leads { grid-template-columns: 1fr; }
+  .chat-layout { grid-template-columns: 1fr; height: auto; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── SIDEBAR ──────────────────────────────────────────── -->
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-mark">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+        <path d="M4 20V11.5a2 2 0 01.7-1.5l6-5.2a2 2 0 012.6 0l6 5.2a2 2 0 01.7 1.5V20" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+        <path d="M4 20h16M9.5 20v-5a2.5 2.5 0 015 0v5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div>
+      <div class="brand-name">Pórtico</div>
+      <div class="brand-sub">Leads inmobiliarios</div>
+    </div>
+  </div>
+
+  <nav class="nav">
+    <div class="nav-label">Principal</div>
+    <button class="nav-item active" data-view="panel">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+      Panel
+    </button>
+    <button class="nav-item" data-view="chat">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 01-12.2 7.7L3 21l1.8-5.8A8.5 8.5 0 1121 11.5z"/></svg>
+      Conversaciones
+    </button>
+    <button class="nav-item" data-view="leads">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      Leads
+      <span class="count" id="nav-leads-count">—</span>
+    </button>
+  </nav>
+
+  <div class="sidebar-foot">
+    <div class="conn" id="connBox">
+      <span class="conn-dot"></span>
+      <span id="connText">Conectando…</span>
+    </div>
+    <div class="agency">
+      <div class="agency-avatar" id="agencyAvatar">IP</div>
+      <div>
+        <div class="agency-name" id="agencyName">Inmobiliaria Premium</div>
+        <div class="agency-plan">Plan Pro</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- ── MAIN ─────────────────────────────────────────────── -->
+<div class="main">
+  <header class="topbar">
+    <div>
+      <h1 id="pageTitle">Panel</h1>
+      <div class="crumb" id="pageCrumb">Resumen de actividad · últimos 30 días</div>
+    </div>
+    <div class="topbar-right">
+      <span class="pill" id="demoPill">MODO DEMO</span>
+      <span class="refresh">Actualizado <span id="lastRefresh">—</span></span>
+      <button class="btn" onclick="loadAll()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 11-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
+        Actualizar
+      </button>
+    </div>
+  </header>
+
+  <div class="scroll">
+
+    <!-- ════ VIEW: PANEL ════ -->
+    <section class="view active" id="view-panel">
+      <div class="kpis">
+        <div class="kpi c-green">
+          <div class="kpi-top">
+            <div class="kpi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg></div>
+            <span class="kpi-tag tag-up">hoy</span>
+          </div>
+          <div class="kpi-val" id="c-today">—</div>
+          <div class="kpi-label">Leads hoy</div>
+          <div class="kpi-sub" id="c-today-sub">cargando…</div>
+        </div>
+        <div class="kpi c-blue">
+          <div class="kpi-top">
+            <div class="kpi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg></div>
+          </div>
+          <div class="kpi-val" id="c-week">—</div>
+          <div class="kpi-label">Esta semana</div>
+          <div class="kpi-sub">últimos 7 días</div>
+        </div>
+        <div class="kpi c-blue">
+          <div class="kpi-top">
+            <div class="kpi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg></div>
+          </div>
+          <div class="kpi-val" id="c-month">—</div>
+          <div class="kpi-label">Este mes</div>
+          <div class="kpi-sub" id="c-month-sub">leads totales</div>
+        </div>
+        <div class="kpi c-green">
+          <div class="kpi-top">
+            <div class="kpi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z"/></svg></div>
+          </div>
+          <div class="kpi-val" id="c-conv">—<small>%</small></div>
+          <div class="kpi-label">Tasa de conversión</div>
+          <div class="kpi-sub" id="c-conv-sub">leads calientes</div>
+        </div>
+        <div class="kpi c-blue">
+          <div class="kpi-top">
+            <div class="kpi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div>
+          </div>
+          <div class="kpi-val" id="c-visits">—</div>
+          <div class="kpi-label">Visitas agendadas</div>
+          <div class="kpi-sub" id="c-visits-sub">este mes</div>
+        </div>
+        <div class="kpi c-amber">
+          <div class="kpi-top">
+            <div class="kpi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div>
+          </div>
+          <div class="kpi-val" id="c-resp">—<small>s</small></div>
+          <div class="kpi-label">Tiempo de respuesta</div>
+          <div class="kpi-sub">media 1ª respuesta</div>
+        </div>
+      </div>
+
+      <div class="row cols-2">
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">Leads por día</div>
+              <div class="panel-sub">Últimos 30 días</div>
+            </div>
+            <div class="panel-sub" id="timeline-total"></div>
+          </div>
+          <div class="panel-body">
+            <svg class="chart-area" id="timelineChart" viewBox="0 0 720 190" preserveAspectRatio="none"></svg>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">Estado de leads</div>
+              <div class="panel-sub">Distribución del mes</div>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="donut-wrap">
+              <svg width="150" height="150" viewBox="0 0 150 150" id="donutChart"></svg>
+              <div class="legend" id="donutLegend"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row" style="grid-template-columns: 360px 1fr;">
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">Fuentes de lead</div>
+              <div class="panel-sub">de dónde llegan</div>
+            </div>
+          </div>
+          <div class="panel-body"><div class="sources" id="sourcesList"></div></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">Últimos leads</div>
+              <div class="panel-sub" id="recentCount"></div>
+            </div>
+            <button class="btn" data-goto="leads" style="padding:6px 12px;">Ver todos</button>
+          </div>
+          <table>
+            <thead><tr><th>Lead</th><th>Zona</th><th>Presupuesto</th><th>Estado</th><th>Visita</th></tr></thead>
+            <tbody id="recentTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="roi">
+          <div class="roi-main">
+            <span class="roi-label">ROI estimado este mes</span>
+            <span class="roi-value" id="roi-pct">—</span>
+          </div>
+          <div class="roi-stats">
+            <div class="roi-stat"><div class="n" id="roi-rev">—</div><div class="l">Comisiones potenciales</div></div>
+            <div class="roi-divider"></div>
+            <div class="roi-stat"><div class="n" id="roi-cost">—</div><div class="l">Coste del servicio</div></div>
+            <div class="roi-divider"></div>
+            <div class="roi-stat"><div class="n" id="roi-hot">—</div><div class="l">Leads calientes</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════ VIEW: CONVERSACIONES ════ -->
+    <section class="view" id="view-chat">
+      <div class="chat-layout">
+        <div class="panel chat-card">
+          <div class="chat-head">
+            <div class="chat-ava">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 01-12.2 7.7L3 21l1.8-5.8A8.5 8.5 0 1121 11.5z"/></svg>
+            </div>
+            <div class="chat-who" style="flex:1;">
+              <h4>Agente Pórtico</h4>
+              <p>en línea · responde al instante</p>
+            </div>
+            <button class="btn" onclick="resetChat()" style="padding:7px 12px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 11-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
+              Reiniciar
+            </button>
+          </div>
+          <div class="chat-body" id="chatMessages"></div>
+          <div class="chat-input-row">
+            <input class="chat-input" id="chatInput" type="text" placeholder="Escribe como un cliente real… (ej. «hola, busco piso en Salamanca»)" autocomplete="off">
+            <button class="chat-send" id="chatSend" onclick="sendChat()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="side-panel">
+          <div class="panel status-card">
+            <div class="status-row">
+              <span class="status-label">Estado del lead</span>
+              <span class="status-badge cold" id="cs-badge">FRÍO</span>
+            </div>
+            <div class="status-msgs" id="cs-msgs">0 mensajes intercambiados</div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><div class="panel-title">Datos cualificados</div></div>
+            <div class="panel-body" style="padding:6px 18px;">
+              <div class="de-list">
+                <div class="de-row" id="row-type"><div class="de-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></div><div><div class="de-k">Operación</div><div class="de-v" id="de-type">Sin definir</div></div></div>
+                <div class="de-row" id="row-prop"><div class="de-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 21V9h6v12"/></svg></div><div><div class="de-k">Inmueble</div><div class="de-v" id="de-prop">Sin definir</div></div></div>
+                <div class="de-row" id="row-zone"><div class="de-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.3-7-11a7 7 0 0114 0c0 4.7-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></div><div><div class="de-k">Zona</div><div class="de-v" id="de-zone">Sin definir</div></div></div>
+                <div class="de-row" id="row-budget"><div class="de-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M15 9a3 3 0 00-3-2c-1.7 0-3 1.1-3 2.5S10.3 12 12 12s3 .9 3 2.5S13.7 17 12 17a3 3 0 01-3-2"/></svg></div><div><div class="de-k">Presupuesto</div><div class="de-v" id="de-budget">Sin definir</div></div></div>
+                <div class="de-row" id="row-urg"><div class="de-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div><div><div class="de-k">Urgencia</div><div class="de-v" id="de-urgency">Sin definir</div></div></div>
+                <div class="de-row" id="row-fin"><div class="de-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6"/></svg></div><div><div class="de-k">Financiación</div><div class="de-v" id="de-financing">Sin definir</div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════ VIEW: LEADS ════ -->
+    <section class="view" id="view-leads">
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Todos los leads</div>
+            <div class="panel-sub" id="leadsCount"></div>
+          </div>
+        </div>
+        <table>
+          <thead><tr><th>Lead</th><th>Zona</th><th>Presupuesto</th><th>Estado</th><th>Fuente</th><th>Mensajes</th><th>Visita</th></tr></thead>
+          <tbody id="leadsTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────────────────────
+// Rutas relativas: la app se sirve desde el propio backend, así conecta sea
+// cual sea el puerto. Si se abre el archivo suelto (offline), cae a datos demo.
+const API = '';
+const CHAT_PHONE = '+34600panel01';
+const COLORS = { 'CALIENTE': '#16a34a', 'TIBIO': '#d97706', 'FRÍO': '#94a3b8' };
+let LIVE = false;
+
+// ── FALLBACK DATA (funciona sin backend) ────────────────────────────────
+const FALLBACK = {
+  summary: { today: 4, week: 19, month: 71, hot: 12, conversionRate: 17, visitsScheduled: 6, visitsCompleted: 5, avgResponseSeconds: 2 },
+  conversion: [
+    { status: 'CALIENTE', count: 12, pct: 17 },
+    { status: 'TIBIO',    count: 47, pct: 66 },
+    { status: 'FRÍO',     count: 12, pct: 17 },
+  ],
+  timeline: (function () {
+    const base = [2,1,3,4,2,5,3,2,4,3,1,2,3,4,2,3,1,2,4,3,2,3,1,4,3,2,3,4,3,2];
+    const today = new Date();
+    return base.map((count, i) => { const d = new Date(today); d.setDate(d.getDate() - (29 - i)); return { date: d.toISOString().split('T')[0], count }; });
+  })(),
+  sources: [
+    { source: 'WhatsApp Directo',    count: 30, pct: 42 },
+    { source: 'Portal Inmobiliario', count: 20, pct: 28 },
+    { source: 'Instagram',           count:  8, pct: 11 },
+    { source: 'Web',                 count:  7, pct: 10 },
+    { source: 'Referido',            count:  6, pct:  8 },
+  ],
+  roi: { hotLeads: 12, potentialRevenue: 23555, serviceCost: 375, roi: 6181 },
+  leads: [
+    { name:'Ana García',     zone:'Salamanca',  budget:485000, type:'compra',   status:'CALIENTE', source:'WhatsApp Directo',    visitScheduled:true,  createdAt:'2026-05-20T09:12:00Z', messagesCount:8 },
+    { name:'Carlos Martínez',zone:'Retiro',     budget:2200,   type:'alquiler', status:'TIBIO',    source:'Portal Inmobiliario', visitScheduled:false, createdAt:'2026-05-20T07:44:00Z', messagesCount:5 },
+    { name:'Elena Rodríguez',zone:'Centro',     budget:691000, type:'compra',   status:'CALIENTE', source:'WhatsApp Directo',    visitScheduled:false, createdAt:'2026-05-19T18:22:00Z', messagesCount:14 },
+    { name:'Marta Díaz',     zone:'Pozuelo',    budget:565000, type:'compra',   status:'TIBIO',    source:'Web',                 visitScheduled:false, createdAt:'2026-05-19T11:33:00Z', messagesCount:18 },
+    { name:'Javier Torres',  zone:'Chamberí',   budget:320000, type:'compra',   status:'CALIENTE', source:'Instagram',           visitScheduled:true,  createdAt:'2026-05-18T16:05:00Z', messagesCount:11 },
+    { name:'Laura Sánchez',  zone:'Malasaña',   budget:1400,   type:'alquiler', status:'TIBIO',    source:'Portal Inmobiliario', visitScheduled:false, createdAt:'2026-05-18T10:21:00Z', messagesCount:7 },
+    { name:'Pablo Fernández',zone:'Hortaleza',  budget:410000, type:'compra',   status:'CALIENTE', source:'Referido',            visitScheduled:true,  createdAt:'2026-05-17T14:47:00Z', messagesCount:9 },
+    { name:'Sofía González', zone:'Vallecas',   budget:195000, type:'compra',   status:'FRÍO',     source:'WhatsApp Directo',    visitScheduled:false, createdAt:'2026-05-17T09:12:00Z', messagesCount:3 },
+    { name:'Miguel López',   zone:'Alcobendas', budget:550000, type:'compra',   status:'CALIENTE', source:'Portal Inmobiliario', visitScheduled:true,  createdAt:'2026-05-16T17:30:00Z', messagesCount:12 },
+    { name:'Carmen Moreno',  zone:'Lavapiés',   budget:900,    type:'alquiler', status:'TIBIO',    source:'Instagram',           visitScheduled:false, createdAt:'2026-05-16T11:08:00Z', messagesCount:6 },
+  ],
+};
+
+// ── FETCH CON FALLBACK ──────────────────────────────────────────────────
+async function apiFetch(path, fallback) {
+  try {
+    const r = await fetch(API + path, { signal: AbortSignal.timeout(3000) });
+    if (!r.ok) throw new Error();
+    LIVE = true;
+    return await r.json();
+  } catch { return fallback; }
+}
+
+// ── NAVIGATION ──────────────────────────────────────────────────────────
+const TITLES = {
+  panel: ['Panel', 'Resumen de actividad · últimos 30 días'],
+  chat:  ['Conversaciones', 'Prueba el agente como si fueras un cliente'],
+  leads: ['Leads', 'Todos los contactos cualificados'],
+};
+function goTo(view) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.view === view));
+  document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + view));
+  document.getElementById('pageTitle').textContent = TITLES[view][0];
+  document.getElementById('pageCrumb').textContent = TITLES[view][1];
+  document.querySelector('.scroll').scrollTop = 0;
+  if (view === 'chat') setTimeout(() => document.getElementById('chatInput').focus(), 60);
+}
+document.querySelectorAll('.nav-item').forEach(n => n.addEventListener('click', () => goTo(n.dataset.view)));
+document.querySelectorAll('[data-goto]').forEach(b => b.addEventListener('click', () => goTo(b.dataset.goto)));
+
+// ── SVG TIMELINE ────────────────────────────────────────────────────────
+function buildTimeline(data) {
+  const W = 720, H = 190, padX = 8, padTop = 16, padBot = 26;
+  const counts = data.map(d => d.count);
+  const max = Math.max(...counts, 1);
+  const total = counts.reduce((a, b) => a + b, 0);
+  document.getElementById('timeline-total').textContent = total + ' leads en 30 días';
+
+  const innerW = W - padX * 2, innerH = H - padTop - padBot;
+  const x = i => padX + (i / (data.length - 1)) * innerW;
+  const y = v => padTop + innerH - (v / max) * innerH;
+
+  let line = '', area = '';
+  data.forEach((d, i) => { const px = x(i), py = y(d.count); line += (i ? 'L' : 'M') + px.toFixed(1) + ' ' + py.toFixed(1) + ' '; });
+  area = line + `L${x(data.length - 1).toFixed(1)} ${padTop + innerH} L${padX} ${padTop + innerH} Z`;
+
+  let grid = '';
+  for (let g = 0; g <= 3; g++) { const gy = padTop + (innerH / 3) * g; grid += `<line class="chart-grid" x1="${padX}" y1="${gy}" x2="${W - padX}" y2="${gy}"/>`; }
+
+  let ticks = '';
+  [0, 7, 14, 21, 29].forEach(i => {
+    const dt = new Date(data[i].date + 'T12:00:00Z');
+    ticks += `<text class="chart-axis" x="${x(i)}" y="${H - 8}" text-anchor="middle">${dt.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}</text>`;
+  });
+
+  let pts = '';
+  data.forEach((d, i) => { pts += `<circle class="spark-pt" cx="${x(i).toFixed(1)}" cy="${y(d.count).toFixed(1)}" r="4"><title>${d.count} leads</title></circle>`; });
+
+  document.getElementById('timelineChart').innerHTML = `
+    <defs><linearGradient id="tlGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2563eb" stop-opacity=".18"/>
+      <stop offset="100%" stop-color="#2563eb" stop-opacity="0"/>
+    </linearGradient></defs>
+    ${grid}
+    <path d="${area}" fill="url(#tlGrad)"/>
+    <path d="${line}" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    ${ticks}${pts}`;
+}
+
+// ── SVG DONUT ───────────────────────────────────────────────────────────
+function buildDonut(data) {
+  const cx = 75, cy = 75, r = 56, sw = 18, C = 2 * Math.PI * r;
+  const total = data.reduce((a, d) => a + d.count, 0) || 1;
+  let offset = 0, arcs = '';
+  data.forEach(d => {
+    const frac = d.count / total;
+    const len = frac * C;
+    if (d.count > 0) {
+      arcs += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${COLORS[d.status]}" stroke-width="${sw}"
+        stroke-dasharray="${len.toFixed(2)} ${(C - len).toFixed(2)}" stroke-dashoffset="${(-offset).toFixed(2)}"
+        transform="rotate(-90 ${cx} ${cy})" stroke-linecap="butt"/>`;
+    }
+    offset += len;
+  });
+  const hotPct = data.find(d => d.status === 'CALIENTE')?.pct ?? 0;
+  document.getElementById('donutChart').innerHTML = `
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#eef1f6" stroke-width="${sw}"/>
+    ${arcs}
+    <g class="donut-center" text-anchor="middle">
+      <text x="${cx}" y="${cy - 2}" font-size="26" font-weight="800" fill="#0f1b2d">${hotPct}%</text>
+      <text x="${cx}" y="${cy + 16}" font-size="11" fill="#8a98aa">calientes</text>
+    </g>`;
+
+  const legend = document.getElementById('donutLegend');
+  legend.innerHTML = '';
+  data.forEach(d => legend.insertAdjacentHTML('beforeend', `
+    <div class="legend-item">
+      <span class="legend-dot" style="background:${COLORS[d.status]}"></span>
+      <span class="legend-name">${d.status}</span>
+      <span class="legend-val">${d.count}</span>
+      <span class="legend-pct">${d.pct}%</span>
+    </div>`));
+}
+
+// ── SOURCES ─────────────────────────────────────────────────────────────
+function buildSources(data) {
+  const max = data[0]?.count ?? 1;
+  const el = document.getElementById('sourcesList');
+  el.innerHTML = '';
+  data.forEach(d => el.insertAdjacentHTML('beforeend', `
+    <div>
+      <div class="src-row"><span class="src-name">${d.source}</span><span class="src-count">${d.count} <span>(${d.pct}%)</span></span></div>
+      <div class="track"><div class="fill" style="width:0%" data-w="${Math.round(d.count / max * 100)}"></div></div>
+    </div>`));
+  requestAnimationFrame(() => el.querySelectorAll('.fill').forEach(f => f.style.width = f.dataset.w + '%'));
+}
+
+// ── TABLES ──────────────────────────────────────────────────────────────
+function badge(st) { const c = st === 'CALIENTE' ? 'b-hot' : st === 'TIBIO' ? 'b-warm' : 'b-cold'; return `<span class="badge ${c}">${st}</span>`; }
+function fmtBudget(b) { return b > 10000 ? b.toLocaleString('es-ES') + ' €' : b.toLocaleString('es-ES') + ' €/mes'; }
+function fmtTime(t) { return new Date(t).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }); }
+function visitCell(v) { return v ? '<span class="v-yes">✓ Sí</span>' : '<span class="v-no">—</span>'; }
+
+function buildRecent(leads) {
+  document.getElementById('recentCount').textContent = leads.length + ' más recientes';
+  const tb = document.getElementById('recentTable'); tb.innerHTML = '';
+  leads.slice(0, 6).forEach(l => tb.insertAdjacentHTML('beforeend', `
+    <tr>
+      <td><div class="t-name">${l.name}</div><div class="t-sub">${fmtTime(l.createdAt)}</div></td>
+      <td><div class="t-name" style="font-weight:500">${l.zone}</div><div class="t-sub">${l.type}</div></td>
+      <td>${fmtBudget(l.budget)}</td>
+      <td>${badge(l.status)}</td>
+      <td>${visitCell(l.visitScheduled)}</td>
+    </tr>`));
+}
+function buildLeads(leads) {
+  document.getElementById('leadsCount').textContent = leads.length + ' leads';
+  document.getElementById('nav-leads-count').textContent = leads.length;
+  const tb = document.getElementById('leadsTable'); tb.innerHTML = '';
+  leads.forEach(l => tb.insertAdjacentHTML('beforeend', `
+    <tr>
+      <td><div class="t-name">${l.name}</div><div class="t-sub">${fmtTime(l.createdAt)}</div></td>
+      <td><div class="t-name" style="font-weight:500">${l.zone}</div><div class="t-sub">${l.type}</div></td>
+      <td>${fmtBudget(l.budget)}</td>
+      <td>${badge(l.status)}</td>
+      <td><span class="t-sub" style="font-size:13px">${l.source}</span></td>
+      <td>${l.messagesCount}</td>
+      <td>${visitCell(l.visitScheduled)}</td>
+    </tr>`));
+}
+
+// ── SUMMARY + ROI ───────────────────────────────────────────────────────
+function buildSummary(s) {
+  animateNum('c-today', s.today); animateNum('c-week', s.week); animateNum('c-month', s.month);
+  animateNum('c-conv', s.conversionRate); animateNum('c-visits', s.visitsScheduled); animateNum('c-resp', s.avgResponseSeconds);
+  document.getElementById('c-today-sub').textContent = s.hot + ' calientes este mes';
+  document.getElementById('c-month-sub').textContent = s.month + ' leads totales';
+  document.getElementById('c-conv-sub').textContent = s.hot + ' de ' + s.month + ' leads';
+  document.getElementById('c-visits-sub').textContent = (s.visitsCompleted ?? 0) + ' realizadas';
+}
+function buildRoi(r) {
+  document.getElementById('roi-pct').textContent = '+' + (r.roi ?? 0).toLocaleString('es-ES') + '%';
+  document.getElementById('roi-rev').textContent = (r.potentialRevenue ?? 0).toLocaleString('es-ES') + ' €';
+  document.getElementById('roi-cost').textContent = (r.serviceCost ?? 0).toLocaleString('es-ES') + ' €';
+  document.getElementById('roi-hot').textContent = r.hotLeads ?? 0;
+}
+function animateNum(id, target) {
+  const el = document.getElementById(id);
+  const small = el.querySelector('small')?.outerHTML ?? '';
+  const start = parseInt(el.textContent) || 0, dur = 650, t0 = performance.now();
+  (function tick(now) {
+    const p = Math.min((now - t0) / dur, 1);
+    el.innerHTML = Math.round(start + (target - start) * (1 - (1 - p) * (1 - p))) + small;
+    if (p < 1) requestAnimationFrame(tick);
+  })(t0);
+}
+
+// ── CONNECTION STATE ────────────────────────────────────────────────────
+function setConn() {
+  const box = document.getElementById('connBox');
+  box.className = 'conn ' + (LIVE ? 'live' : 'demo');
+  document.getElementById('connText').textContent = LIVE ? 'Conectado al servidor' : 'Datos de demostración';
+  document.getElementById('demoPill').style.display = LIVE ? 'none' : '';
+}
+
+// ── LOAD ALL ────────────────────────────────────────────────────────────
+async function loadAll() {
+  LIVE = false;
+  const [summary, conversion, timeline, sources, roi, leads] = await Promise.all([
+    apiFetch('/metrics/summary', FALLBACK.summary),
+    apiFetch('/metrics/conversion', FALLBACK.conversion),
+    apiFetch('/metrics/timeline', FALLBACK.timeline),
+    apiFetch('/metrics/sources', FALLBACK.sources),
+    apiFetch('/metrics/roi', FALLBACK.roi),
+    apiFetch('/metrics/leads/recent?limit=50', FALLBACK.leads),
+  ]);
+  buildSummary(summary); buildTimeline(timeline); buildDonut(conversion);
+  buildSources(sources); buildRoi(roi); buildRecent(leads); buildLeads(leads);
+  setConn();
+  document.getElementById('lastRefresh').textContent = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+}
+loadAll();
+setInterval(loadAll, 30000);
+
+// ── CHAT (AGENTE) ───────────────────────────────────────────────────────
+const GREETING = '¡Hola! Soy el asistente de tu inmobiliaria. ¿Estás buscando comprar o alquilar?';
+
+function addMsg(text, role) {
+  const div = document.createElement('div');
+  div.className = 'msg ' + role;
+  if (role === 'typing') { div.innerHTML = '<div class="dots"><span></span><span></span><span></span></div>'; div.id = 'typing'; }
+  else div.textContent = text;
+  const area = document.getElementById('chatMessages');
+  area.appendChild(div); area.scrollTop = area.scrollHeight;
+}
+function removeTyping() { document.getElementById('typing')?.remove(); }
+
+function setDe(rowId, valId, has, display) {
+  const row = document.getElementById(rowId), el = document.getElementById(valId);
+  const was = row.classList.contains('on');
+  row.classList.toggle('on', has);
+  el.textContent = has ? display : 'Sin definir';
+  if (has && !was) { el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 800); }
+}
+function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
+
+function updateChatStatus(session) {
+  const d = session.leadData, st = session.status;
+  const badge = document.getElementById('cs-badge');
+  badge.textContent = st;
+  badge.className = 'status-badge ' + (st === 'CALIENTE' ? 'hot' : st === 'TIBIO' ? 'warm' : 'cold');
+  document.getElementById('cs-msgs').textContent = session.messagesCount + ' mensajes intercambiados';
+  setDe('row-type', 'de-type', !!d.type, d.type === 'compra' ? 'Compra' : 'Alquiler');
+  setDe('row-prop', 'de-prop', !!d.propertyType, cap(d.propertyType));
+  setDe('row-zone', 'de-zone', !!d.zone, d.zone);
+  setDe('row-budget', 'de-budget', d.budget != null, d.budget ? d.budget.toLocaleString('es-ES') + ' €' : '');
+  setDe('row-urg', 'de-urgency', d.urgencyMonths != null, d.urgencyMonths != null ? (d.urgencyMonths <= 1 ? 'Inmediata' : d.urgencyMonths + ' meses') : '');
+  setDe('row-fin', 'de-financing', d.needsFinancing !== null && d.needsFinancing !== undefined, d.needsFinancing ? 'Hipoteca' : 'Al contado');
+}
+
+async function sendChat() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  document.getElementById('chatSend').disabled = true;
+  addMsg(text, 'user');
+  addMsg('', 'typing');
+  try {
+    const r = await fetch(API + '/demo/message', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phoneNumber: CHAT_PHONE, text }) });
+    removeTyping();
+    if (!r.ok) throw new Error();
+    const data = await r.json();
+    addMsg(data.message, 'agent');
+    updateChatStatus(data.session);
+  } catch {
+    removeTyping();
+    addMsg('⚠ No hay conexión con el servidor. Arranca el backend (npm run dev) para probar el agente real.', 'agent');
+  } finally {
+    document.getElementById('chatSend').disabled = false;
+    document.getElementById('chatInput').focus();
+  }
+}
+async function resetChat() {
+  try { await fetch(API + '/demo/reset', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phoneNumber: CHAT_PHONE }) }); } catch {}
+  document.getElementById('chatMessages').innerHTML = '';
+  document.getElementById('cs-badge').textContent = 'FRÍO';
+  document.getElementById('cs-badge').className = 'status-badge cold';
+  document.getElementById('cs-msgs').textContent = '0 mensajes intercambiados';
+  ['row-type','row-prop','row-zone','row-budget','row-urg','row-fin'].forEach(id => document.getElementById(id).classList.remove('on'));
+  ['de-type','de-prop','de-zone','de-budget','de-urgency','de-financing'].forEach(id => document.getElementById(id).textContent = 'Sin definir');
+  setTimeout(() => addMsg(GREETING, 'agent'), 250);
+}
+document.getElementById('chatInput').addEventListener('keydown', e => { if (e.key === 'Enter') sendChat(); });
+setTimeout(() => addMsg(GREETING, 'agent'), 400);
+</script>
+</body>
+</html>
