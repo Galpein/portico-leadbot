@@ -56,8 +56,8 @@ export async function saveLead(session: Session): Promise<void> {
 
     logger.info(`Lead ${session.id} guardado en Sheets`);
   } catch (err) {
-    logger.error('Error guardando lead en Sheets', err);
-    throw err;
+    // Sheets es opcional: si no está configurado, no debe romper la respuesta al cliente.
+    logger.warn('No se pudo guardar el lead en Sheets (se continúa igualmente)', err);
   }
 }
 

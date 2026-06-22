@@ -86,7 +86,9 @@ export async function handleIncomingMessage(req: Request, res: Response): Promis
     if (agentResult.isQualified && !session.isQualified) {
       markQualified(phoneNumber);
       logger.info(`Lead ${phoneNumber} cualificado — estado: ${scoreResult.status}`);
-      await saveLead(updatedSession);
+      await saveLead(updatedSession).catch((e) =>
+        logger.warn('saveLead falló, se continúa', e)
+      );
     }
 
     await sendWhatsAppMessage({ to: phoneNumber, text: agentResult.message });

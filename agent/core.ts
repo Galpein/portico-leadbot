@@ -1,10 +1,49 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI, SchemaType, Schema } from '@google/generative-ai';
 import { CONFIG } from '../config/constants';
 import { logger } from '../config/logger';
 import { buildSystemPrompt } from './prompts';
 import { AgentResponse, ConversationMessage } from './types';
 
 const genAI = new GoogleGenerativeAI(CONFIG.gemini.apiKey);
+
+// Esquema que obliga a Gemini a devolver SIEMPRE un JSON con esta forma exacta.
+const responseSchema: Schema = {
+  type: SchemaType.OBJECT,
+  properties: {
+    message: { type: SchemaType.STRING },
+    extracted: {
+      type: SchemaType.OBJECT,
+      properties: {
+        type: { type: SchemaType.STRING, nullable: true },
+        propertyType: { type: SchemaType.STRING, nullable: true },
+        zone: { type: SchemaType.STRING, nullable: true },
+        budget: { type: SchemaType.NUMBER, nullable: true },
+        needsFinancing: { type: SchemaType.BOOLEAN, nullable: true },
+        urgencyMonths: { type: SchemaType.NUMBER, nullable: true },
+        name: { type: SchemaType.STRING, nullable: true },
+        phone: { type: SchemaType.STRING, nullable: true },
+      },
+      required: [
+        'type', 'propertyType', 'zone', 'budget',
+        'needsFinancing', 'urgencyMonths', 'name', 'phone',
+      ],
+    },
+    isQualified: { type: SchemaType.BOOLEAN },
+  },
+  required: ['message', 'extracted', 'isQualified'],
+};
+
+// Gemini exige que el historial empiece con un mensaje de 'user'.
+// Descartamos los mensajes 'model' iniciales que queden tras truncar.
+function buildHistory(messages: ConversationMessage[]) {
+  const mapped = messages.map((m) => ({
+    role: m.role === 'assistant' ? 'model' : 'user',
+    parts: [{ text: m.content }],
+  }));
+
+  const firstUser = mapped.findIndex((m) => m.role === 'user');
+  return firstUser === -1 ? [] : mapped.slice(firstUser);
+}
 
 export async function getAgentResponse(
   messages: ConversationMessage[],
@@ -13,14 +52,13 @@ export async function getAgentResponse(
   const model = genAI.getGenerativeModel({
     model: CONFIG.gemini.model,
     systemInstruction: buildSystemPrompt(),
+    generationConfig: {
+      responseMimeType: 'application/json',
+      responseSchema,
+    },
   });
 
-  const history = messages.map((m) => ({
-    role: m.role === 'assistant' ? 'model' : 'user',
-    parts: [{ text: m.content }],
-  }));
-
-  const chat = model.startChat({ history });
+  const chat = model.startChat({ history: buildHistory(messages) });
 
   let attempt = 0;
   while (attempt < 2) {
@@ -39,16 +77,20 @@ export async function getAgentResponse(
   throw new Error('No se pudo obtener respuesta del agente');
 }
 
+function emptyExtracted() {
+  return {
+    type: null, propertyType: null, zone: null, budget: null,
+    needsFinancing: null, urgencyMonths: null, name: null, phone: null,
+  };
+}
+
 function parseAgentResponse(raw: string): AgentResponse {
   const jsonMatch = raw.match(/\{[\s\S]*\}/);
   if (!jsonMatch) {
     logger.warn('Respuesta del agente sin JSON válido, usando fallback');
     return {
       message: raw.trim() || 'Disculpa, ¿podrías repetirme lo que buscas?',
-      extracted: {
-        type: null, propertyType: null, zone: null, budget: null,
-        needsFinancing: null, urgencyMonths: null, name: null, phone: null,
-      },
+      extracted: emptyExtracted(),
       isQualified: false,
     };
   }
@@ -59,10 +101,7 @@ function parseAgentResponse(raw: string): AgentResponse {
     logger.warn('JSON del agente malformado', { raw });
     return {
       message: raw.trim(),
-      extracted: {
-        type: null, propertyType: null, zone: null, budget: null,
-        needsFinancing: null, urgencyMonths: null, name: null, phone: null,
-      },
+      extracted: emptyExtracted(),
       isQualified: false,
     };
   }
