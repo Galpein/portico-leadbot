@@ -24,7 +24,7 @@ export const CONFIG = {
   },
   gemini: {
     apiKey: process.env.GEMINI_API_KEY ?? '',
-    model: 'gemini-1.5-flash',
+    model: 'gemini-2.5-flash',
     maxTokens: 500,
     maxHistoryMessages: 10,
   },
