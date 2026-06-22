@@ -32,6 +32,7 @@ export async function getAgentResponse(
       attempt++;
       logger.error(`Error llamando a Gemini (intento ${attempt}/2)`, err);
       if (attempt >= 2) throw err;
+      await new Promise((r) => setTimeout(r, 2000));
     }
   }
 
