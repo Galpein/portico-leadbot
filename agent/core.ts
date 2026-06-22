@@ -1,39 +1,36 @@
-import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { CONFIG } from '../config/constants';
 import { logger } from '../config/logger';
 import { buildSystemPrompt } from './prompts';
 import { AgentResponse, ConversationMessage } from './types';
 
-const client = new Anthropic({ apiKey: CONFIG.claude.apiKey });
+const genAI = new GoogleGenerativeAI(CONFIG.gemini.apiKey);
 
 export async function getAgentResponse(
   messages: ConversationMessage[],
   userMessage: string
 ): Promise<AgentResponse> {
+  const model = genAI.getGenerativeModel({
+    model: CONFIG.gemini.model,
+    systemInstruction: buildSystemPrompt(),
+  });
+
   const history = messages.map((m) => ({
-    role: m.role as 'user' | 'assistant',
-    content: m.content,
+    role: m.role === 'assistant' ? 'model' : 'user',
+    parts: [{ text: m.content }],
   }));
 
-  history.push({ role: 'user', content: userMessage });
+  const chat = model.startChat({ history });
 
   let attempt = 0;
   while (attempt < 2) {
     try {
-      const response = await client.messages.create({
-        model: CONFIG.claude.model,
-        max_tokens: CONFIG.claude.maxTokens,
-        system: buildSystemPrompt(),
-        messages: history,
-      });
-
-      const rawText =
-        response.content[0].type === 'text' ? response.content[0].text : '';
-
+      const result = await chat.sendMessage(userMessage);
+      const rawText = result.response.text();
       return parseAgentResponse(rawText);
     } catch (err) {
       attempt++;
-      logger.error(`Error llamando a Claude (intento ${attempt}/2)`, err);
+      logger.error(`Error llamando a Gemini (intento ${attempt}/2)`, err);
       if (attempt >= 2) throw err;
     }
   }
@@ -48,35 +45,22 @@ function parseAgentResponse(raw: string): AgentResponse {
     return {
       message: raw.trim() || 'Disculpa, ¿podrías repetirme lo que buscas?',
       extracted: {
-        type: null,
-        propertyType: null,
-        zone: null,
-        budget: null,
-        needsFinancing: null,
-        urgencyMonths: null,
-        name: null,
-        phone: null,
+        type: null, propertyType: null, zone: null, budget: null,
+        needsFinancing: null, urgencyMonths: null, name: null, phone: null,
       },
       isQualified: false,
     };
   }
 
   try {
-    const parsed = JSON.parse(jsonMatch[0]) as AgentResponse;
-    return parsed;
+    return JSON.parse(jsonMatch[0]) as AgentResponse;
   } catch {
     logger.warn('JSON del agente malformado', { raw });
     return {
       message: raw.trim(),
       extracted: {
-        type: null,
-        propertyType: null,
-        zone: null,
-        budget: null,
-        needsFinancing: null,
-        urgencyMonths: null,
-        name: null,
-        phone: null,
+        type: null, propertyType: null, zone: null, budget: null,
+        needsFinancing: null, urgencyMonths: null, name: null, phone: null,
       },
       isQualified: false,
     };

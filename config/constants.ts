@@ -18,9 +18,13 @@ export const CONFIG = {
   },
   claude: {
     apiKey: process.env.CLAUDE_API_KEY ?? '',
-    // claude-sonnet-4-20250514 está deprecado (se retira el 15/06/2026).
-    // claude-sonnet-4-6 es mejor y más barato (3 $/15 $ por millón de tokens).
     model: 'claude-sonnet-4-6',
+    maxTokens: 500,
+    maxHistoryMessages: 10,
+  },
+  gemini: {
+    apiKey: process.env.GEMINI_API_KEY ?? '',
+    model: 'gemini-2.0-flash',
     maxTokens: 500,
     maxHistoryMessages: 10,
   },
